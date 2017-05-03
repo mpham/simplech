@@ -12,6 +12,7 @@ using System.Web.Http.Description;
 using SimpleChat.Models;
 using System.Web.Http.Results;
 using SimpleChat.Helpers;
+using SimpleChat.Filters;
 
 namespace SimpleChat.Controllers
 {
@@ -42,7 +43,7 @@ namespace SimpleChat.Controllers
             {
                 data = new
                 {
-                    id = user.Id,
+                    id = user.UserId,
                     name = user.Name,
                     email = user.Email
                 },
@@ -52,9 +53,84 @@ namespace SimpleChat.Controllers
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, body);
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
             response.Content.Headers.ContentType.CharSet = "utf-8";
-            response.Headers.Add("Authorization", AuthHelper.CreateToken(user.Id));
+            response.Headers.Add("Authorization", "Bearer " + AuthHelper.CreateToken(user.UserId));
 
             return new ResponseMessageResult(response);
+        }
+
+        [AuthFilter]
+        [Route("users/current")]
+        public async Task<IHttpActionResult> GetUser()
+        {
+            object userId;
+            Request.Properties.TryGetValue("user_id", out userId);
+            try
+            {
+                User user = await db.Users.FindAsync(Convert.ToInt32(userId));
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(new { id = user.UserId, name = user.Name, email = user.Email });
+            }
+            catch(InvalidOperationException)
+            {
+                // log
+            }
+
+            return BadRequest();
+        }
+
+        [AuthFilter]
+        [HttpPatch]
+        [Route("users/current")]
+        public async Task<IHttpActionResult> PatchUser([FromBody] UserCredentials cred)
+        {
+            object userId;
+            Request.Properties.TryGetValue("user_id", out userId);
+            try
+            {
+                User user = await db.Users.FindAsync(Convert.ToInt32(userId));
+                
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                
+                if (!string.IsNullOrEmpty(cred.Name))
+                {
+                    user.Name = cred.Name;
+                }
+                if (!string.IsNullOrEmpty(cred.Email))
+                {
+                    user.Email = cred.Email;
+                }
+                if (!string.IsNullOrEmpty(cred.Password))
+                {
+                    if (cred.Password == cred.Password_Confirmation)
+                    {
+                        // TODO: encrypt password
+                        user.Password = cred.Password;
+                    }
+                    else
+                    {
+                        throw new Exception("password error");
+                    }
+                }
+                
+                db.Entry(user).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+
+                return Ok(new { id = user.UserId, name = user.Name, email = user.Email });
+            }
+            catch (Exception e)
+            {
+                // log
+            }
+
+            return BadRequest();
         }
 
         // GET: api/Users
@@ -85,7 +161,7 @@ namespace SimpleChat.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != user.Id)
+            if (id != user.UserId)
             {
                 return BadRequest();
             }
@@ -123,7 +199,7 @@ namespace SimpleChat.Controllers
             db.Users.Add(user);
             await db.SaveChangesAsync();
 
-            return CreatedAtRoute("DefaultApi", new { id = user.Id }, user);
+            return CreatedAtRoute("DefaultApi", new { id = user.UserId }, user);
         }
 
         // DELETE: api/Users/5
@@ -153,7 +229,7 @@ namespace SimpleChat.Controllers
 
         private bool UserExists(int id)
         {
-            return db.Users.Count(e => e.Id == id) > 0;
+            return db.Users.Count(e => e.UserId == id) > 0;
         }
     }
 }

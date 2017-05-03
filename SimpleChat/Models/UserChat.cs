@@ -7,16 +7,14 @@ using System.Web;
 
 namespace SimpleChat.Models
 {
-    public class User
+    public class UserChat
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int UserChatId { get; set; }
+        [Required]
         public int UserId { get; set; }
         [Required]
-        public string Name { get; set; }
-        [Required]
-        public string Email { get; set; }
-        [Required]
-        public string Password { get; set; }
+        public int ChatId { get; set; }
     }
 }

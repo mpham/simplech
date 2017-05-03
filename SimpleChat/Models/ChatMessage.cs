@@ -5,18 +5,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
+
 namespace SimpleChat.Models
 {
-    public class User
+    public class ChatMessage
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ChatMessageId { get; set; }
+        [Required]
+        public DateTime CreatedAt { get; set; }
+        [Required]
         public int UserId { get; set; }
         [Required]
-        public string Name { get; set; }
+        public int ChatId { get; set; }
         [Required]
-        public string Email { get; set; }
-        [Required]
-        public string Password { get; set; }
+        public string Message { get; set; }
     }
 }
