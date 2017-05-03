@@ -11,6 +11,7 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using SimpleChat.Models;
 using System.Web.Http.Results;
+using SimpleChat.Helpers;
 
 namespace SimpleChat.Controllers
 {
@@ -51,7 +52,7 @@ namespace SimpleChat.Controllers
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, body);
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
             response.Content.Headers.ContentType.CharSet = "utf-8";
-            response.Headers.Add("Authorization", "testtoken");
+            response.Headers.Add("Authorization", AuthHelper.CreateToken(user.Id));
 
             return new ResponseMessageResult(response);
         }

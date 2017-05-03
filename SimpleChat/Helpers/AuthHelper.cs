@@ -12,7 +12,7 @@ namespace SimpleChat.Helpers
 {
     public class AuthHelper
     {
-        public static string CreateToken(string id)
+        public static string CreateToken(int id)
         {
             // set expiration to 6 hours
             IDateTimeProvider provider = new UtcDateTimeProvider();
@@ -23,7 +23,7 @@ namespace SimpleChat.Helpers
 
             var payload = new Dictionary<string, object>
             {
-                { "id", id },
+                { "id", id.ToString() },
                 { "exp", expirationInSecondsSinceEpoch }
             };
 
