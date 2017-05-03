@@ -14,5 +14,10 @@ namespace SimpleChat.Models
         public int ChatId { get; set; }
         [Required]
         public string Name { get; set; }
+        public int LastChatMessageId { get; set; }
+
+        // Navigation Properties
+        public ICollection<User> Users { get; set; }
+        public ChatMessage LastChatMessage { get; set; }
     }
 }

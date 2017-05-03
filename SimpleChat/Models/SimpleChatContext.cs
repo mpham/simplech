@@ -19,6 +19,8 @@ namespace SimpleChat.Models
         {
         }
 
-        public System.Data.Entity.DbSet<SimpleChat.Models.User> Users { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
     }
 }
