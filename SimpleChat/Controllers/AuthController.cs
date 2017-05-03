@@ -13,7 +13,7 @@ namespace SimpleChat.Controllers
     {
         [HttpPost]
         [Route("auth/login")]
-        public async Task<IHttpActionResult> Login([FromBody] Credentials credentials)
+        public async Task<IHttpActionResult> Login([FromBody] UserCredentials credentials)
         {
             return Ok("asdf");
         }

@@ -10,12 +10,51 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
 using SimpleChat.Models;
+using System.Web.Http.Results;
 
 namespace SimpleChat.Controllers
 {
     public class UsersController : ApiController
     {
         private SimpleChatContext db = new SimpleChatContext();
+
+        // create user
+        [Route("users")]
+        public async Task<IHttpActionResult> PostUser([FromBody] UserCredentials cred)
+        {
+            if (cred.Password != cred.Password_Confirmation)
+            {
+                return BadRequest();
+            }
+            
+            // TODO: encrypt password
+
+            User user = new User();
+            user.Name = cred.Name;
+            user.Email = cred.Email;
+            user.Password = cred.Password;
+
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+
+            var body = new
+            {
+                data = new
+                {
+                    id = user.Id,
+                    name = user.Name,
+                    email = user.Email
+                },
+                meta = new { }
+            };
+
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, body);
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            response.Content.Headers.ContentType.CharSet = "utf-8";
+            response.Headers.Add("Authorization", "testtoken");
+
+            return new ResponseMessageResult(response);
+        }
 
         // GET: api/Users
         public IQueryable<User> GetUsers()
