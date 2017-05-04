@@ -14,27 +14,18 @@ namespace SimpleChat.Controllers
     [AuthFilter]
     public class ChatMessagesController : ApiController
     {
-        private SimpleChatContext db = new SimpleChatContext();
+        SimpleChatContext db = new SimpleChatContext();
 
         [HttpGet]
         [Route("chats/{chatId}/chat_messages")]
         public async Task<IHttpActionResult> ListChatMessages(int chatId, int page = 1, int limit = 10)
         {
-            var query = (from m in db.ChatMessages select m);
-            query = query
-                .Where(m => m.ChatId == chatId)
-                .OrderByDescending(m => m.CreatedAt);
+            DataHelper dataHelper = new DataHelper();
+            ChatMessagePaginationResult paginationResult = dataHelper.FindChatMessages(chatId, page, limit);
 
-            int totalResults = query.Count();
-
-            query = query
-                .Skip((page - 1) * limit)
-                .Take(limit);
-
-            List<ChatMessage> chatMessages = query.ToList();
+            List<ChatMessage> chatMessages = paginationResult.Results as List<ChatMessage>;
             List<object> respData = new List<object>();
-
-            foreach(ChatMessage chatMessage in chatMessages)
+            foreach (ChatMessage chatMessage in chatMessages)
             {
                 respData.Add(DataHelper.BuildChatMessageResponseData(chatMessage, chatMessage.User));
             }
@@ -43,10 +34,10 @@ namespace SimpleChat.Controllers
             {
                 pagination = new
                 {
-                    current_page = page,
-                    per_page = limit,
-                    page_count = DataHelper.CalculatePageCount(limit, totalResults),
-                    total_count = totalResults
+                    current_page = paginationResult.Page,
+                    per_page = paginationResult.Limit,
+                    page_count = paginationResult.PageCount,
+                    total_count = paginationResult.TotalResults
                 }
             };
 
@@ -57,6 +48,11 @@ namespace SimpleChat.Controllers
         [Route("chats/{chatId}/chat_messages")]
         public async Task<IHttpActionResult> CreateChatMessage(int chatId, [FromBody] ChatRequestData data)
         {
+            DataHelper dataHelper = new DataHelper();
+            object userId;
+            Request.Properties.TryGetValue("user_id", out userId);
+            int uid = Convert.ToInt32(userId);
+            
             if (string.IsNullOrEmpty(data.Message))
             {
                 return BadRequest();
@@ -64,21 +60,8 @@ namespace SimpleChat.Controllers
 
             try
             {
-                object userId;
-                Request.Properties.TryGetValue("user_id", out userId);
-                int uid = Convert.ToInt32(userId);
-
-                ChatMessage chatMessage = new ChatMessage
-                {
-                    CreatedAt = DateTime.UtcNow,
-                    UserId = uid,
-                    ChatId = chatId,
-                    Message = data.Message
-                };
-                db.ChatMessages.Add(chatMessage);
-                await db.SaveChangesAsync();
-
-                User user = await db.Users.FindAsync(uid);
+                ChatMessage chatMessage = await dataHelper.CreateChatMessage(uid, chatId, data.Message);
+                User user = await dataHelper.FindUserById(uid);
 
                 return Ok(new { data = DataHelper.BuildChatMessageResponseData(chatMessage, user), meta = new { } });
             }
@@ -87,7 +70,6 @@ namespace SimpleChat.Controllers
                 // log
                 return InternalServerError();
             }
-            
         }
     }
 }

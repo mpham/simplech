@@ -11,6 +11,12 @@ namespace SimpleChat.Helpers
     {
         private SimpleChatContext _db = new SimpleChatContext();
 
+        public async Task<User> FindUserById(int userId)
+        {
+            User user = await _db.Users.FindAsync(userId);
+            return user;
+        }
+
         public object FindUsersByChat(int chatId)
         {
             var userChats = _db.UserChats
@@ -30,6 +36,42 @@ namespace SimpleChat.Helpers
                 .FirstOrDefault();
 
             return BuildChatMessageResponseData(cm, cm.User);
+        }
+
+        public ChatMessagePaginationResult FindChatMessages(int chatId, int page, int limit)
+        {
+            ChatMessagePaginationResult result = new ChatMessagePaginationResult();
+            result.Page = page;
+            result.Limit = limit;
+
+            var query = (from m in _db.ChatMessages select m);
+            query = query
+                .Where(m => m.ChatId == chatId)
+                .OrderByDescending(m => m.CreatedAt);
+
+            result.TotalResults = query.Count();
+
+            query = query
+                .Skip((page - 1) * limit)
+                .Take(limit);
+
+            result.Results = query.ToList();
+            return result;
+        }
+
+        public async Task<ChatMessage> CreateChatMessage(int userId, int chatId, string message)
+        {
+            ChatMessage chatMessage = new ChatMessage
+            {
+                CreatedAt = DateTime.UtcNow,
+                UserId = userId,
+                ChatId = chatId,
+                Message = message
+            };
+            _db.ChatMessages.Add(chatMessage);
+            await _db.SaveChangesAsync();
+
+            return chatMessage;
         }
 
         public static int CalculatePageCount(int limit, int total)
