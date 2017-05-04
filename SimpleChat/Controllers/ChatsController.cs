@@ -66,6 +66,11 @@ namespace SimpleChat.Controllers
         [Route("chats")]
         public async Task<IHttpActionResult> CreateChat([FromBody] ChatRequestData data)
         {
+            if (string.IsNullOrEmpty(data.Name) || string.IsNullOrEmpty(data.Message))
+            {
+                return BadRequest();
+            }
+
             Chat chat = new Chat();
             chat.Name = data.Name;
             db.Chats.Add(chat);
@@ -107,12 +112,17 @@ namespace SimpleChat.Controllers
         [Route("chats/{id}")]
         public async Task<IHttpActionResult> UpdateChat(int id, [FromBody] ChatRequestData data)
         {
+            if (string.IsNullOrEmpty(data.Name))
+            {
+                return BadRequest();
+            }
+
             Chat chat = db.Chats.Find(4);
             chat.Name = data.Name;
 
             db.Entry(chat).State = EntityState.Modified;
             await db.SaveChangesAsync();
-
+           
             var respData = new
             {
                 id = chat.ChatId,
