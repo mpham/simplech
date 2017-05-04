@@ -20,9 +20,35 @@ namespace SimpleChat.Controllers
     {
         private SimpleChatContext db = new SimpleChatContext();
 
+        [AuthFilter]
+        [HttpGet]
+        [Route("users/current")]
+        public async Task<IHttpActionResult> ReadUser()
+        {
+            object userId;
+            Request.Properties.TryGetValue("user_id", out userId);
+            try
+            {
+                User user = await db.Users.FindAsync(Convert.ToInt32(userId));
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(new { id = user.UserId, name = user.Name, email = user.Email });
+            }
+            catch (InvalidOperationException)
+            {
+                // log
+            }
+
+            return BadRequest();
+        }
+
         // create user
+        [HttpPost]
         [Route("users")]
-        public async Task<IHttpActionResult> PostUser([FromBody] UserCredentials cred)
+        public async Task<IHttpActionResult> CreateUser([FromBody] UserCredentials cred)
         {
             if (cred.Password != cred.Password_Confirmation)
             {
@@ -59,33 +85,9 @@ namespace SimpleChat.Controllers
         }
 
         [AuthFilter]
-        [Route("users/current")]
-        public async Task<IHttpActionResult> GetUser()
-        {
-            object userId;
-            Request.Properties.TryGetValue("user_id", out userId);
-            try
-            {
-                User user = await db.Users.FindAsync(Convert.ToInt32(userId));
-                if (user == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(new { id = user.UserId, name = user.Name, email = user.Email });
-            }
-            catch(InvalidOperationException)
-            {
-                // log
-            }
-
-            return BadRequest();
-        }
-
-        [AuthFilter]
         [HttpPatch]
         [Route("users/current")]
-        public async Task<IHttpActionResult> PatchUser([FromBody] UserCredentials cred)
+        public async Task<IHttpActionResult> UpdateUser([FromBody] UserCredentials cred)
         {
             object userId;
             Request.Properties.TryGetValue("user_id", out userId);
@@ -97,7 +99,6 @@ namespace SimpleChat.Controllers
                 {
                     return NotFound();
                 }
-
                 
                 if (!string.IsNullOrEmpty(cred.Name))
                 {

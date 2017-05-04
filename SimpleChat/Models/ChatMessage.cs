@@ -21,5 +21,9 @@ namespace SimpleChat.Models
         public int ChatId { get; set; }
         [Required]
         public string Message { get; set; }
+
+        // Navigation Properties
+        public virtual User User { get; set; }
+        public virtual Chat Chat { get; set; }
     }
 }

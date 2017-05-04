@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Linq;
 using System.Web;
 
@@ -22,5 +23,11 @@ namespace SimpleChat.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<UserChat> UserChats { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
+        }
     }
 }

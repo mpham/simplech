@@ -167,9 +167,14 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\AuthHelper.cs" />
+    <Compile Include="Helpers\DataHelper.cs" />
     <Compile Include="Migrations\201705031845512_RenameUserId.cs" />
     <Compile Include="Migrations\201705031845512_RenameUserId.Designer.cs">
       <DependentUpon>201705031845512_RenameUserId.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201705040039362_AddManyToManyUserChat.cs" />
+    <Compile Include="Migrations\201705040039362_AddManyToManyUserChat.Designer.cs">
+      <DependentUpon>201705040039362_AddManyToManyUserChat.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Chat.cs" />
@@ -208,6 +213,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201705031845512_RenameUserId.resx">
       <DependentUpon>201705031845512_RenameUserId.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201705040039362_AddManyToManyUserChat.resx">
+      <DependentUpon>201705040039362_AddManyToManyUserChat.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
