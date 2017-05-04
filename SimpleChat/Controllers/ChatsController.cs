@@ -21,10 +21,21 @@ namespace SimpleChat.Controllers
         [Route("chats")]
         public async Task<IHttpActionResult> ListChats(int page = 1, int limit = 10)
         {
+            var query = (from c in db.Chats select c);
+            query = query
+                .OrderBy(e => e.Name)
+                .Include("UserChats");
+
+            int totalResults = query.Count();
+
+            query = query
+                .Skip((page - 1) * limit)
+                .Take(limit);
+
+            List<Chat> chats = query.ToList();
+
             List<object> respData = new List<object>();
-            List<Chat> chats = db.Chats.Include("UserChats").ToList();
-            
-            foreach(Chat c in chats)
+            foreach (Chat c in chats)
             {
                 var data = new
                 {
@@ -37,7 +48,16 @@ namespace SimpleChat.Controllers
                 respData.Add(data);
             }
 
-            var respMeta = new { };
+            var respMeta = new
+            {
+                pagination = new
+                {
+                    current_page = page,
+                    per_page = limit,
+                    page_count = DataHelper.CalculatePageCount(limit, totalResults),
+                    total_count = totalResults
+                }
+            };
 
             return Ok(new { data = respData.ToArray(), meta = respMeta });
         }

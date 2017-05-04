@@ -43,5 +43,15 @@ namespace SimpleChat.Helpers
                 }
             };
         }
+
+        public static int CalculatePageCount(int limit, int total)
+        {
+            int pageCount = total / limit;
+            if ((total % limit) > 0)
+            {
+                pageCount++;
+            }
+            return pageCount;
+        }
     }
 }
