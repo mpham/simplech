@@ -14,6 +14,8 @@ namespace SimpleChat.Models
         public int ChatId { get; set; }
         [Required]
         public string Name { get; set; }
+        [Required]
+        public int CreatedBy { get; set; }
 
         // Navigation Properties
         public virtual ICollection<UserChat> UserChats { get; set; }

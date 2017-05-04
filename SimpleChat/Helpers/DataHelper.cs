@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace SimpleChat.Helpers
@@ -28,20 +29,21 @@ namespace SimpleChat.Helpers
                 .OrderByDescending(m => m.CreatedAt)
                 .FirstOrDefault();
 
-            return new
-            {
-                id = cm.ChatMessageId,
-                chat_id = cm.ChatId,
-                user_id = cm.UserId,
-                message = cm.Message,
-                created_at = cm.CreatedAt,
-                user = new
-                {
-                    id = cm.User.UserId,
-                    name = cm.User.Name,
-                    email = cm.User.Email
-                }
-            };
+            //return new
+            //{
+            //    id = cm.ChatMessageId,
+            //    chat_id = cm.ChatId,
+            //    user_id = cm.UserId,
+            //    message = cm.Message,
+            //    created_at = cm.CreatedAt,
+            //    user = new
+            //    {
+            //        id = cm.User.UserId,
+            //        name = cm.User.Name,
+            //        email = cm.User.Email
+            //    }
+            //};
+            return BuildChatMessageResponseData(cm, cm.User);
         }
 
         public static int CalculatePageCount(int limit, int total)
@@ -52,6 +54,24 @@ namespace SimpleChat.Helpers
                 pageCount++;
             }
             return pageCount;
+        }
+
+        public static object BuildChatMessageResponseData(ChatMessage chatmessage, User user)
+        {
+            return new
+            {
+                id = chatmessage.ChatMessageId,
+                chat_id = chatmessage.ChatId,
+                user_id = chatmessage.UserId,
+                message = chatmessage.Message,
+                created_at = chatmessage.CreatedAt,
+                user = new
+                {
+                    id = user.UserId,
+                    name = user.Name,
+                    email = user.Email
+                }
+            };
         }
     }
 }

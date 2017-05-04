@@ -66,6 +66,10 @@ namespace SimpleChat.Controllers
         [Route("chats")]
         public async Task<IHttpActionResult> CreateChat([FromBody] ChatRequestData data)
         {
+            object userId;
+            Request.Properties.TryGetValue("user_id", out userId);
+            int uid = Convert.ToInt32(userId);
+
             if (string.IsNullOrEmpty(data.Name) || string.IsNullOrEmpty(data.Message))
             {
                 return BadRequest();
@@ -73,16 +77,14 @@ namespace SimpleChat.Controllers
 
             Chat chat = new Chat();
             chat.Name = data.Name;
+            chat.CreatedBy = uid;
             db.Chats.Add(chat);
             await db.SaveChangesAsync();
-
-            object userId;
-            Request.Properties.TryGetValue("user_id", out userId);
 
             UserChat userChat = new UserChat
             {
                 ChatId = chat.ChatId,
-                UserId = Convert.ToInt32(userId)
+                UserId = uid
             };
             db.UserChats.Add(userChat);
             await db.SaveChangesAsync();
@@ -91,7 +93,7 @@ namespace SimpleChat.Controllers
             {
                 ChatId = chat.ChatId,
                 Message = data.Message,
-                UserId = Convert.ToInt32(userId),
+                UserId = uid,
                 CreatedAt = DateTime.UtcNow
             };
             db.ChatMessages.Add(chatMessage);
@@ -112,12 +114,23 @@ namespace SimpleChat.Controllers
         [Route("chats/{id}")]
         public async Task<IHttpActionResult> UpdateChat(int id, [FromBody] ChatRequestData data)
         {
+            object userId;
+            Request.Properties.TryGetValue("user_id", out userId);
+            int uid = Convert.ToInt32(userId);
+
             if (string.IsNullOrEmpty(data.Name))
             {
                 return BadRequest();
             }
 
-            Chat chat = db.Chats.Find(4);
+            Chat chat = db.Chats.Find(id);
+
+            // only allow original creator to update chat
+            if (uid != chat.CreatedBy)
+            {
+                return Unauthorized();
+            }
+
             chat.Name = data.Name;
 
             db.Entry(chat).State = EntityState.Modified;
