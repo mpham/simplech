@@ -17,16 +17,14 @@ namespace SimpleChat.Filters
         {
             AuthenticationHeaderValue authHeader = actionContext.Request.Headers.Authorization;
 
-            var decoded = AuthHelper.DecodeToken(authHeader.Parameter);
-            Type type = decoded.GetType();
-            if (type == typeof(String))
+            IDictionary<string, object> decoded = AuthHelper.DecodeToken(authHeader.Parameter);
+            object errorMessage;
+            if (decoded.TryGetValue("error", out errorMessage))
             {
                 throw new HttpResponseException(new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized));
             }
 
-            IDictionary<string, object> d = decoded as IDictionary<string, object>;
-
-            actionContext.Request.Properties.Add(new KeyValuePair<string, object>("user_id", d["id"]));
+            actionContext.Request.Properties.Add(new KeyValuePair<string, object>("user_id", decoded["id"]));
             
             base.OnActionExecuting(actionContext);
         }

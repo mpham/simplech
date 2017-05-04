@@ -38,7 +38,7 @@ namespace SimpleChat.Helpers
             return token;
         }
 
-        public static object DecodeToken(string token)
+        public static IDictionary<string, object> DecodeToken(string token)
         {
             var secret = ConfigurationManager.AppSettings["jwt.secret"];
 
@@ -53,13 +53,21 @@ namespace SimpleChat.Helpers
                 IDictionary<string, object> payload = decoder.DecodeToObject(token, secret, true);
                 return payload;
             }
-            catch(TokenExpiredException)
+            catch(TokenExpiredException e)
             {
-                return "Token expired";
+                // log expired token
+                return new Dictionary<string, object>()
+                {
+                    { "error", e.Message }
+                };
             }
-            catch(SignatureVerificationException)
+            catch(SignatureVerificationException e)
             {
-                return "Invalid signature";
+                // log invalid signature
+                return new Dictionary<string, object>()
+                {
+                    { "error", e.Message }
+                };
             }
         }
     }

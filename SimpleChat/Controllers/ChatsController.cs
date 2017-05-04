@@ -21,6 +21,7 @@ namespace SimpleChat.Controllers
         [Route("chats")]
         public async Task<IHttpActionResult> ListChats(int page = 1, int limit = 10)
         {
+
             var query = (from c in db.Chats select c);
             query = query
                 .OrderBy(e => e.Name)
@@ -35,14 +36,15 @@ namespace SimpleChat.Controllers
             List<Chat> chats = query.ToList();
 
             List<object> respData = new List<object>();
+            DataHelper dataHelper = new DataHelper();
             foreach (Chat c in chats)
             {
                 var data = new
                 {
                     id = c.ChatId,
                     name = c.Name,
-                    users = DataHelper.FindUsersByChat(c.ChatId),
-                    last_chat_message = DataHelper.FindLastMessageByChat(c.ChatId)
+                    users = dataHelper.FindUsersByChat(c.ChatId),
+                    last_chat_message = dataHelper.FindLastMessageByChat(c.ChatId)
                 };
 
                 respData.Add(data);
@@ -99,12 +101,13 @@ namespace SimpleChat.Controllers
             db.ChatMessages.Add(chatMessage);
             await db.SaveChangesAsync();
 
+            DataHelper dataHelper = new DataHelper();
             var respData = new
             {
                 id = chat.ChatId,
                 name = chat.Name,
-                users = DataHelper.FindUsersByChat(chat.ChatId),
-                last_chat_message = DataHelper.FindLastMessageByChat(chat.ChatId)
+                users = dataHelper.FindUsersByChat(chat.ChatId),
+                last_chat_message = dataHelper.FindLastMessageByChat(chat.ChatId)
             };
 
             return Ok(new { data = respData, meta = new { } });
@@ -135,13 +138,14 @@ namespace SimpleChat.Controllers
 
             db.Entry(chat).State = EntityState.Modified;
             await db.SaveChangesAsync();
-           
+
+            DataHelper dataHelper = new DataHelper();
             var respData = new
             {
                 id = chat.ChatId,
                 name = chat.Name,
-                users = DataHelper.FindUsersByChat(chat.ChatId),
-                last_chat_message = DataHelper.FindLastMessageByChat(chat.ChatId)
+                users = dataHelper.FindUsersByChat(chat.ChatId),
+                last_chat_message = dataHelper.FindLastMessageByChat(chat.ChatId)
             };
 
             return Ok(new { data = respData, meta = new { } });
