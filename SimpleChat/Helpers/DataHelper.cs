@@ -1,6 +1,7 @@
 ﻿using SimpleChat.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -15,6 +16,69 @@ namespace SimpleChat.Helpers
         {
             User user = await _db.Users.FindAsync(userId);
             return user;
+        }
+
+        public async Task<Chat> CreateChat(string name, int createdBy)
+        {
+            Chat chat = new Chat();
+            chat.Name = name;
+            chat.CreatedBy = createdBy;
+            _db.Chats.Add(chat);
+            await _db.SaveChangesAsync();
+
+            return chat;
+        }
+
+        public async Task<Chat> UpdateChat(int chatId, int userId, string name)
+        {
+            Chat chat = _db.Chats.Find(chatId);
+
+            // only allow original creator to update chat
+            if (userId != chat.CreatedBy)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            chat.Name = name;
+
+            _db.Entry(chat).State = EntityState.Modified;
+            await _db.SaveChangesAsync();
+
+            return chat;
+        }
+
+        public async Task<UserChat> CreateUserChat(int chatId, int userId)
+        {
+            UserChat userChat = new UserChat
+            {
+                ChatId = chatId,
+                UserId = userId
+            };
+            _db.UserChats.Add(userChat);
+            await _db.SaveChangesAsync();
+
+            return userChat;
+        }
+
+        public ChatPaginationResult FindChats(int page, int limit)
+        {
+            ChatPaginationResult result = new ChatPaginationResult();
+            result.Page = page;
+            result.Limit = limit;
+
+            var query = (from c in _db.Chats select c);
+            query = query
+                .OrderBy(e => e.Name)
+                .Include("UserChats");
+
+            result.TotalResults = query.Count();
+
+            query = query
+                .Skip((page - 1) * limit)
+                .Take(limit);
+
+            result.Results = query.ToList();
+            return result;
         }
 
         public object FindUsersByChat(int chatId)

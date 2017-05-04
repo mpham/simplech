@@ -21,23 +21,11 @@ namespace SimpleChat.Controllers
         [Route("chats")]
         public async Task<IHttpActionResult> ListChats(int page = 1, int limit = 10)
         {
-
-            var query = (from c in db.Chats select c);
-            query = query
-                .OrderBy(e => e.Name)
-                .Include("UserChats");
-
-            int totalResults = query.Count();
-
-            query = query
-                .Skip((page - 1) * limit)
-                .Take(limit);
-
-            List<Chat> chats = query.ToList();
+            DataHelper dataHelper = new DataHelper();
+            ChatPaginationResult paginationResult = dataHelper.FindChats(page, limit);
 
             List<object> respData = new List<object>();
-            DataHelper dataHelper = new DataHelper();
-            foreach (Chat c in chats)
+            foreach (Chat c in paginationResult.Results)
             {
                 var data = new
                 {
@@ -54,10 +42,10 @@ namespace SimpleChat.Controllers
             {
                 pagination = new
                 {
-                    current_page = page,
-                    per_page = limit,
-                    page_count = DataHelper.CalculatePageCount(limit, totalResults),
-                    total_count = totalResults
+                    current_page = paginationResult.Page,
+                    per_page = paginationResult.Limit,
+                    page_count = paginationResult.PageCount,
+                    total_count = paginationResult.TotalResults
                 }
             };
 
@@ -68,6 +56,7 @@ namespace SimpleChat.Controllers
         [Route("chats")]
         public async Task<IHttpActionResult> CreateChat([FromBody] ChatRequestData data)
         {
+            DataHelper dataHelper = new DataHelper();
             object userId;
             Request.Properties.TryGetValue("user_id", out userId);
             int uid = Convert.ToInt32(userId);
@@ -77,46 +66,34 @@ namespace SimpleChat.Controllers
                 return BadRequest();
             }
 
-            Chat chat = new Chat();
-            chat.Name = data.Name;
-            chat.CreatedBy = uid;
-            db.Chats.Add(chat);
-            await db.SaveChangesAsync();
-
-            UserChat userChat = new UserChat
+            try
             {
-                ChatId = chat.ChatId,
-                UserId = uid
-            };
-            db.UserChats.Add(userChat);
-            await db.SaveChangesAsync();
+                Chat chat = await dataHelper.CreateChat(data.Name, uid);
+                UserChat userChat = await dataHelper.CreateUserChat(chat.ChatId, uid);
+                ChatMessage chatMessage = await dataHelper.CreateChatMessage(uid, chat.ChatId, data.Message);
 
-            ChatMessage chatMessage = new ChatMessage
+                var respData = new
+                {
+                    id = chat.ChatId,
+                    name = chat.Name,
+                    users = dataHelper.FindUsersByChat(chat.ChatId),
+                    last_chat_message = dataHelper.FindLastMessageByChat(chat.ChatId)
+                };
+
+                return Ok(new { data = respData, meta = new { } });
+            }
+            catch(Exception)
             {
-                ChatId = chat.ChatId,
-                Message = data.Message,
-                UserId = uid,
-                CreatedAt = DateTime.UtcNow
-            };
-            db.ChatMessages.Add(chatMessage);
-            await db.SaveChangesAsync();
-
-            DataHelper dataHelper = new DataHelper();
-            var respData = new
-            {
-                id = chat.ChatId,
-                name = chat.Name,
-                users = dataHelper.FindUsersByChat(chat.ChatId),
-                last_chat_message = dataHelper.FindLastMessageByChat(chat.ChatId)
-            };
-
-            return Ok(new { data = respData, meta = new { } });
+                // log it
+                return InternalServerError();
+            }
         }
 
         [HttpPatch]
         [Route("chats/{id}")]
         public async Task<IHttpActionResult> UpdateChat(int id, [FromBody] ChatRequestData data)
         {
+            DataHelper dataHelper = new DataHelper();
             object userId;
             Request.Properties.TryGetValue("user_id", out userId);
             int uid = Convert.ToInt32(userId);
@@ -126,29 +103,28 @@ namespace SimpleChat.Controllers
                 return BadRequest();
             }
 
-            Chat chat = db.Chats.Find(id);
-
-            // only allow original creator to update chat
-            if (uid != chat.CreatedBy)
+            try
             {
+                Chat chat = await dataHelper.UpdateChat(id, uid, data.Name);
+                var respData = new
+                {
+                    id = chat.ChatId,
+                    name = chat.Name,
+                    users = dataHelper.FindUsersByChat(chat.ChatId),
+                    last_chat_message = dataHelper.FindLastMessageByChat(chat.ChatId)
+                };
+
+                return Ok(new { data = respData, meta = new { } });
+            }
+            catch(UnauthorizedAccessException)
+            {
+                // log it
                 return Unauthorized();
             }
-
-            chat.Name = data.Name;
-
-            db.Entry(chat).State = EntityState.Modified;
-            await db.SaveChangesAsync();
-
-            DataHelper dataHelper = new DataHelper();
-            var respData = new
+            catch(Exception)
             {
-                id = chat.ChatId,
-                name = chat.Name,
-                users = dataHelper.FindUsersByChat(chat.ChatId),
-                last_chat_message = dataHelper.FindLastMessageByChat(chat.ChatId)
-            };
-
-            return Ok(new { data = respData, meta = new { } });
+                return InternalServerError();
+            }
         }
     }
 }
