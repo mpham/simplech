@@ -184,6 +184,7 @@
     <Compile Include="Models\ChatPaginationResult.cs" />
     <Compile Include="Models\ChatRequestData.cs" />
     <Compile Include="Models\PaginationResult.cs" />
+    <Compile Include="Models\BlacklistToken.cs" />
     <Compile Include="Models\UserChat.cs" />
     <Compile Include="Models\UserCredentials.cs" />
     <Compile Include="Models\SimpleChatContext.cs" />

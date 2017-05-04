@@ -44,6 +44,13 @@ namespace SimpleChat.Helpers
 
             try
             {
+                // first check if it is blacklisted
+                BlacklistToken blt = (new DataHelper()).FindBlacklistToken(token);
+                if (blt != null)
+                {
+                    throw new TokenExpiredException("Blacklisted");
+                }
+
                 IJsonSerializer serializer = new JsonNetSerializer();
                 IDateTimeProvider provider = new UtcDateTimeProvider();
                 IJwtValidator validator = new JwtValidator(serializer, provider);

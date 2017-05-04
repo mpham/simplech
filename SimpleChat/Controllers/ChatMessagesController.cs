@@ -59,6 +59,7 @@ namespace SimpleChat.Controllers
             try
             {
                 ChatMessage chatMessage = await dataHelper.CreateChatMessage(uid, chatId, data.Message);
+                UserChat userChat = await dataHelper.CreateUserChat(uid, chatId);
                 User user = await dataHelper.FindUserById(uid);
 
                 return Ok(new { data = DataHelper.BuildChatMessageResponseData(chatMessage, user), meta = new { } });

@@ -25,7 +25,8 @@ namespace SimpleChat.Filters
             }
 
             actionContext.Request.Properties.Add(new KeyValuePair<string, object>("user_id", decoded["id"]));
-            
+            actionContext.Request.Properties.Add(new KeyValuePair<string, object>("token", authHeader.Parameter));
+
             base.OnActionExecuting(actionContext);
         }
 

@@ -12,6 +12,12 @@ namespace SimpleChat.Helpers
     {
         private SimpleChatContext _db = new SimpleChatContext();
 
+        public User FindUserByEmail(string email)
+        {
+            User user = _db.Users.Where(u => u.Email == email).FirstOrDefault();
+            return user;
+        }
+
         public async Task<User> FindUserById(int userId)
         {
             User user = await _db.Users.FindAsync(userId);
@@ -47,8 +53,17 @@ namespace SimpleChat.Helpers
             return chat;
         }
 
-        public async Task<UserChat> CreateUserChat(int chatId, int userId)
+        public async Task<UserChat> CreateUserChat(int userId, int chatId)
         {
+            List<UserChat> foundUserChat = (from uc in _db.UserChats
+                                      where uc.ChatId == chatId && uc.UserId == userId
+                                      select uc).ToList();
+
+            if (foundUserChat.Count > 0)
+            {
+                return foundUserChat[0];
+            }
+
             UserChat userChat = new UserChat
             {
                 ChatId = chatId,
@@ -138,14 +153,22 @@ namespace SimpleChat.Helpers
             return chatMessage;
         }
 
-        public static int CalculatePageCount(int limit, int total)
+        public async Task<BlacklistToken> CreateBlacklistToken(string token)
         {
-            int pageCount = total / limit;
-            if ((total % limit) > 0)
+            BlacklistToken blToken = new BlacklistToken
             {
-                pageCount++;
-            }
-            return pageCount;
+                Token = token
+            };
+            _db.BlacklistTokens.Add(blToken);
+            await _db.SaveChangesAsync();
+
+            return blToken;
+        }
+
+        public BlacklistToken FindBlacklistToken(string token)
+        {
+            BlacklistToken blt = _db.BlacklistTokens.Where(t => t.Token == token).FirstOrDefault();
+            return blt;
         }
 
         public static object BuildChatMessageResponseData(ChatMessage chatmessage, User user)

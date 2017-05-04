@@ -24,6 +24,7 @@ namespace SimpleChat.Models
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<UserChat> UserChats { get; set; }
+        public DbSet<BlacklistToken> BlacklistTokens { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
