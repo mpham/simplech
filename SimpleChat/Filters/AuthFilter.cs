@@ -17,6 +17,11 @@ namespace SimpleChat.Filters
         {
             AuthenticationHeaderValue authHeader = actionContext.Request.Headers.Authorization;
 
+            if (authHeader == null)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized));
+            }
+
             IDictionary<string, object> decoded = AuthHelper.DecodeToken(authHeader.Parameter);
             object errorMessage;
             if (decoded.TryGetValue("error", out errorMessage))

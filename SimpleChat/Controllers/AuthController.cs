@@ -57,12 +57,12 @@ namespace SimpleChat.Controllers
         [AuthFilter]
         [HttpGet]
         [Route("auth/logout")]
-        public async void Logout()
+        public void Logout()
         {
             object token;
             if (Request.Properties.TryGetValue("token", out token))
             {
-                await (new DataHelper()).CreateBlacklistToken(token.ToString());
+                (new DataHelper()).CreateBlacklistToken(token.ToString());
             }
         }
     }

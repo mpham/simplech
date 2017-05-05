@@ -69,7 +69,7 @@ namespace SimpleChat.Controllers
             try
             {
                 Chat chat = await dataHelper.CreateChat(data.Name, uid);
-                UserChat userChat = await dataHelper.CreateUserChat(chat.ChatId, uid);
+                UserChat userChat = await dataHelper.CreateUserChat(uid, chat.ChatId);
                 ChatMessage chatMessage = await dataHelper.CreateChatMessage(uid, chat.ChatId, data.Message);
 
                 var respData = new
@@ -82,7 +82,7 @@ namespace SimpleChat.Controllers
 
                 return Ok(new { data = respData, meta = new { } });
             }
-            catch(Exception)
+            catch(Exception e)
             {
                 // log it
                 return InternalServerError();

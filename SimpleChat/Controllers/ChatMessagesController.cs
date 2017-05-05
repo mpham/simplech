@@ -16,7 +16,7 @@ namespace SimpleChat.Controllers
     {
         [HttpGet]
         [Route("chats/{chatId}/chat_messages")]
-        public async Task<IHttpActionResult> ListChatMessages(int chatId, int page = 1, int limit = 10)
+        public IHttpActionResult ListChatMessages(int chatId, int page = 1, int limit = 10)
         {
             DataHelper dataHelper = new DataHelper();
             ChatMessagePaginationResult paginationResult = dataHelper.FindChatMessages(chatId, page, limit);

@@ -153,16 +153,14 @@ namespace SimpleChat.Helpers
             return chatMessage;
         }
 
-        public async Task<BlacklistToken> CreateBlacklistToken(string token)
+        public void CreateBlacklistToken(string token)
         {
             BlacklistToken blToken = new BlacklistToken
             {
                 Token = token
             };
             _db.BlacklistTokens.Add(blToken);
-            await _db.SaveChangesAsync();
-
-            return blToken;
+            _db.SaveChangesAsync();
         }
 
         public BlacklistToken FindBlacklistToken(string token)
